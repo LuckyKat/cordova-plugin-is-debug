@@ -8,12 +8,25 @@
 - (void)getIsDebug:(CDVInvokedUrlCommand*)command
 {
     CDVPluginResult* pluginResult = nil;
+    BOOL hasDebugDefinition = false;
+    BOOL isDebug = false;
 
+    // Check preprocessor definition
     #ifdef DEBUG
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK  messageAsBool:(true)];
+        hasDebugDefinition = true;
     #else
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK  messageAsBool:(false)];
+        hasDebugDefinition = false;
     #endif
+
+    // check sandbox
+    // https://stackoverflow.com/questions/26081543/how-to-tell-at-runtime-whether-an-ios-app-is-running-through-a-testflight-beta-i
+    NSURL *receiptURL = [[NSBundle mainBundle] appStoreReceiptURL];
+    NSString *receiptURLString = [receiptURL path];
+    BOOL hasSandbox = ([receiptURLString rangeOfString:@"sandboxReceipt"].location != NSNotFound);
+
+    isDebug = hasDebugDefinition || hasSandbox;
+    
+    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK  messageAsBool:(isDebug)];
 
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
